@@ -1,20 +1,25 @@
-# 🏛️ Sarkari Job Alert Bot
+## 🚀 Live Demo
+Bot is running 24/7 on Render and sends daily Telegram alerts
 
-AI-powered Government Job Alert Bot that scrapes 5 govt job portals daily, 
-filters CS/IT relevant jobs using Groq LLaMA, and sends Telegram alerts.
-
-## 🛠️ Tech Stack
-- **n8n** — Automation engine
-- **Groq LLaMA 3.3 70B** — AI job filter
-- **Telegram Bot** — Job alerts
-- **Google Sheets** — Deduplication storage
-- **Render** — Free cloud hosting
-
-## ⚙️ How It Works
-1. Fetches jobs from 5 RSS feeds daily at 8AM
-2. AI filters only CS/IT relevant jobs
-3. Sends Telegram alert for relevant jobs
-4. Saves all jobs to Google Sheets
-
-## 📊 Workflow
+## 📸 Workflow
 ![Workflow](workflow.png)
+
+## 📋 Features
+- Scrapes 5 government job portals daily
+- AI filters only CS/IT relevant jobs
+- Zero manual effort — fully automated
+- Duplicate prevention via Google Sheets
+- Free to run — ₹0 cost
+
+## 🔑 Setup
+1. Import workflow JSON to n8n
+2. Add Groq API key in HTTP Request node
+3. Add Telegram Bot Token
+4. Add Google Service Account JSON
+5. Activate workflow
+
+## 📝 Resume Bullet
+Built an AI-powered Government Job Alert Bot using n8n, Groq LLaMA, 
+and Telegram that scrapes 5 trusted govt job portals daily, filters 
+CS/IT relevant postings using LLM classification, and delivers 
+personalized Telegram alerts — eliminating manual job hunting
