@@ -1,0 +1,584 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1568,
+        -48
+      ],
+      "id": "a4edf60e-b413-4764-a1c7-435969c30721",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://govtjobsdiary.com/feed/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        -368
+      ],
+      "id": "e4ac0fca-3e7b-40a2-848a-239de3887edd",
+      "name": "HTTP Request",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "url": "https://www.sarkarinaukri.com/feed/",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        -192
+      ],
+      "id": "ac0c9c59-e847-4ac3-9653-490ae2f4ad69",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "numberInputs": 5
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -816,
+        -48
+      ],
+      "id": "089f9ea5-28a3-4314-9820-a7bb2d48a910",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\nfor (const input of $input.all()) {\n  const raw = input.json.data;\n  \n  const jobMatches = raw.match(/<item>([\\s\\S]*?)<\\/item>/g) || [];\n  \n  for (const job of jobMatches) {\n    const title = (job.match(/<title><!\\[CDATA\\[(.*?)\\]\\]><\\/title>/) || \n                   job.match(/<title>(.*?)<\\/title>/))?.[1] || '';\n    const link = (job.match(/<link>(.*?)<\\/link>/) || \n                  job.match(/<guid[^>]*>(.*?)<\\/guid>/))?.[1] || '';\n    const description = (job.match(/<description><!\\[CDATA\\[(.*?)\\]\\]><\\/description>/) || \n                         job.match(/<description>(.*?)<\\/description>/))?.[1] || '';\n    const pubDate = job.match(/<pubDate>(.*?)<\\/pubDate>/)?.[1] || '';\n\n    if (title && link) {\n      items.push({\n        json: { title, link, description, pubDate }\n      });\n    }\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        -48
+      ],
+      "id": "1c8828b3-3484-4714-a378-ce0341a6c293",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw",
+          "mode": "list",
+          "cachedResultName": "n8n job bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -400,
+        -48
+      ],
+      "id": "c3d46e8d-f144-47b2-9662-2dec97c784cf",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "46k7vtqF6Pl9tIhY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all links already saved in Google Sheet\nconst seenLinks = $('Get row(s) in sheet').all()\n  .map(item => item.json.Link)\n  .filter(link => link);\n\n// Get all jobs from Code node (parsed RSS)\nconst allJobs = $('Code in JavaScript').all();\n\n// Only keep jobs NOT already in sheet\nconst newJobs = allJobs.filter(job => {\n  return !seenLinks.includes(job.json.link);\n});\n\nreturn newJobs;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -192,
+        -48
+      ],
+      "id": "0ddeca68-75b1-4e52-a130-ed5089ee08c1",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer api key"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are a strict job filter for B.Tech/BE/Diploma Computer Science and IT students. Reply ONLY in valid JSON, no extra text: {\\\"relevant\\\": true, \\\"reason\\\": \\\"one line\\\", \\\"category\\\": \\\"Software/IT/Electronics/Other\\\"}. Mark relevant=true ONLY if the job qualification accepts any of these: B.Tech CS, BE CS, B.Tech IT, BE IT, B.Tech Software Engineering, Diploma in CS, Diploma in IT, BCA, MCA, B.Sc CS, Computer Science degree, Information Technology degree, Software Engineering degree. Mark relevant=false if job is for: civil, mechanical, electrical, arts, commerce, nursing, pharmacy, law, agriculture, or any non-CS field. If qualification is general (\\\"any graduate\\\", \\\"any degree\\\") mark relevant=false. Job Title: {{ $json.title }} Qualification: {{ $json.description.replace(/[\\\"\\\\n\\\\r]/g, ' ').substring(0, 300) }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        32,
+        -48
+      ],
+      "id": "819f22e8-7fe1-408f-b7d2-a89258c7d009",
+      "name": "HTTP Request2",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\nconst groqItems = $input.all();\nconst jobItems = $('Code in JavaScript1').all();\n\nfor (let i = 0; i < groqItems.length; i++) {\n  try {\n    const content = groqItems[i].json.choices[0].message.content;\n    const cleaned = content.replace(/```json|```/g, '').trim();\n    const parsed = JSON.parse(cleaned);\n    const job = jobItems[i]?.json || {};\n\n    items.push({\n      json: {\n        relevant: parsed.relevant,\n        reason: parsed.reason,\n        category: parsed.category,\n        title: job.title,\n        link: job.link,\n        description: job.description,\n        pubDate: job.pubDate,\n      }\n    });\n  } catch(e) {\n    items.push({\n      json: {\n        relevant: false,\n        reason: \"parse error\",\n        category: \"Other\"\n      }\n    });\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "b3ebd681-ba79-4260-9c9a-ebb4606aa45e",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dbea8381-bef8-4d64-8f61-3c277a29df19",
+              "leftValue": "={{ $json.relevant }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        432,
+        -48
+      ],
+      "id": "a605efd9-ff58-4fe1-91b2-bb70dbeaafc8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "1372563032",
+        "text": "=🏛️ New Sarkari Job Alert!  💼 {{ $json.title }}  🏷️ Category: {{ $json.category }} 💡 Why relevant: {{ $json.reason }} 📅 Posted: {{ $json.pubDate }}  🔗 Apply Now: {{ $json.link }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        688,
+        -160
+      ],
+      "id": "ae56dc32-ea72-42f2-8802-0fa378385d44",
+      "name": "Send a text message",
+      "webhookId": "0cce7250-e43a-4529-bfaf-5939c50f2552",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "ZqBat1MD9qBfxObo",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw",
+          "mode": "list",
+          "cachedResultName": "n8n job bot",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/152Po2Y5XhTsFd37e0nzU-f_DQi2EsFB3OHebUAZb6Nw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Title": "={{ $json.title }}",
+            "Link": "={{ $json.link }}",
+            "Date": "={{ $json.pubDate }}",
+            "Sent": "={{ $json.relevant }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Link",
+              "displayName": "Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Sent",
+              "displayName": "Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -32
+      ],
+      "id": "b2f1dbb5-5623-486a-b553-7a5294bebe38",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleApi": {
+          "id": "46k7vtqF6Pl9tIhY",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.indgovtjobs.in/feeds/posts/default/-/IT%20Jobs",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        160
+      ],
+      "id": "d977faf3-3dcd-443f-8ece-e1f4d47532ea",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "url": "https://www.indgovtjobs.in/feeds/posts/default",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        336
+      ],
+      "id": "290ee560-6075-47ad-aa09-624a45003b78",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "url": "https://www.projobalert.com/feeds/posts/default",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -1088,
+        -16
+      ],
+      "id": "6002ffc3-54e4-4226-9e20-8cd5a56dfc26",
+      "name": "HTTP Request5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "04456763-6f75-428f-bfa7-92744136e997",
+  "meta": {
+    "instanceId": "7bda36c00864110c38589592bb3f3889acfdd967fe4224d769d7befe29cb2575"
+  },
+  "id": "103nGeobTK2auK0M",
+  "tags": []
+}
