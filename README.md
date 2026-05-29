@@ -2,7 +2,7 @@
 Bot is running 24/7 on Render and sends daily Telegram alerts
 
 ## 📸 Workflow
-![Workflow](workflow.png)
+![Workflow](image.png)
 
 ## 📋 Features
 - Scrapes 5 government job portals daily
