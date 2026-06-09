@@ -18,8 +18,4 @@ Bot is running 24/7 on Render and sends daily Telegram alerts
 4. Add Google Service Account JSON
 5. Activate workflow
 
-## 📝 Resume Bullet
-Built an AI-powered Government Job Alert Bot using n8n, Groq LLaMA, 
-and Telegram that scrapes 5 trusted govt job portals daily, filters 
-CS/IT relevant postings using LLM classification, and delivers 
-personalized Telegram alerts — eliminating manual job hunting
+
